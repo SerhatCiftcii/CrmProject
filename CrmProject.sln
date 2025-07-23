@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmProject.Application", "C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{3344BAD3-AD10-4393-BEEB-3CE14D2D832F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmProject.Infrastructure.Persistence", "Infrastructure\CrmProject.Persistence\CrmProject.Infrastructure.Persistence.csproj", "{6B115A3F-A1F6-4FFC-91AB-35B66C684317}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmProject.Persistence", "Infrastructure\CrmProject.Persistence\CrmProject.Persistence.csproj", "{6B115A3F-A1F6-4FFC-91AB-35B66C684317}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentation", "{F813AF5E-ECEF-4B66-82C9-DDF3F81A0D35}"
 EndProject
