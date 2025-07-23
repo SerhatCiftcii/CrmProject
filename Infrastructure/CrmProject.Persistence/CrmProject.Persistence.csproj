@@ -24,7 +24,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\CrmProject.Application\CrmProject.Application.csproj" />
-    <ProjectReference Include="..\..\Core\CrmProject.Domain\CrmProject.Domain.csproj" />
   </ItemGroup>
 
 </Project>

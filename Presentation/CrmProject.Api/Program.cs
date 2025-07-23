@@ -1,20 +1,69 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿// CrmProject.Api/Program.cs
 
-// Add services to the container.
+using AutoMapper; // AutoMapper için eklendi
+using CrmProject.Application.Interfaces;
+using CrmProject.Application.MappingProfiles; // AutoMapper profilleri için eklendi
+using CrmProject.Application.Services; // CustomerService için eklendi
+using CrmProject.Application.Validations; // CustomerValidator için eklendi
+using CrmProject.Infrastructure.Persistence.Context;
+
+using CrmProject.Persistence.Repositories;
+using FluentValidation; // FluentValidation için eklendi
+using FluentValidation.AspNetCore; // FluentValidation ASP.NET Core entegrasyonu için eklendi
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System.Reflection; // Assembly taraması için eklendi
+
+var builder = WebApplication.CreateBuilder(args);
+
+// CORS politikası için bir isim tanımlıyoruz
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+// AppDbContext'i konteynere ekliyoruz.
+// AppDbContext kendi bağlantı dizesini OnConfiguring metodunda yönettiği için burada options.UseSqlServer() kullanmaya gerek yoktur.
+builder.Services.AddDbContext<AppDbContext>();
+
+// Repository ve Unit of Work servislerini konteynere ekliyoruz.
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// AutoMapper servislerini ekliyoruz.
+// Birden fazla assembly'deki tüm Profile sınıflarını otomatik olarak bulur ve kaydeder.
+builder.Services.AddAutoMapper(new[] {
+    Assembly.GetExecutingAssembly(), // CrmProject.Api projesini tarar (eğer burada da profil varsa)
+    typeof(CustomerMappingProfile).Assembly // CrmProject.Application projesini tarar
+});
+
+// FluentValidation servislerini ekliyoruz.
+// Bu, Controller'larda otomatik doğrulama için gereklidir.
+builder.Services.AddFluentValidationAutoValidation();
+// Validatörleri otomatik kaydet
+builder.Services.AddValidatorsFromAssembly(typeof(CustomerValidator).Assembly);
+
+// Uygulama servislerini (Business Logic) konteynere ekliyoruz.
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+
 builder.Services.AddControllers();
 
-// Swagger servislerini ekle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+// CORS servisini ekliyoruz
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      builder =>
+                      {
+                          builder.AllowAnyOrigin() // Herhangi bir kaynaktan gelen isteklere izin verir (geliştirme ortamı için uygun)
+                                 .AllowAnyHeader() // Herhangi bir HTTP başlığına izin verir
+                                 .AllowAnyMethod(); // Herhangi bir HTTP metoduna (GET, POST, PUT, DELETE) izin verir
+                      });
+});
 var app = builder.Build();
 
-// HTTP request pipeline konfigürasyonu
 if (app.Environment.IsDevelopment())
 {
-    // Swagger middleware'lerini devreye al
-    app.UseSwagger(); // swagger.json oluşturur
-    app.UseSwaggerUI(); // Swagger UI arayüzünü açar
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
