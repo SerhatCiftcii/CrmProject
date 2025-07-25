@@ -1,10 +1,10 @@
 ﻿// CrmProject.Application/Services/ICustomerService.cs
 
-using CrmProject.Application.DTOs; // DTO'lar için
+using CrmProject.Application.DTOs.CustomerDtos; // DTO'lar için
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace CrmProject.Application.Services
+namespace CrmProject.Application.Services.ServiceProducts
 {
     public interface ICustomerService
     {

@@ -1,14 +1,15 @@
 ﻿// CrmProject.Api/Controllers/CustomerController.cs
 
-using CrmProject.Application.DTOs;
+using CrmProject.Application.DTOs.CustomerDtos;
 using CrmProject.Application.Interfaces;
-using CrmProject.Application.Services;
-using FluentValidation;
+using CrmProject.Application.Services.ServiceProducts;
+
+// using CrmProject.Application.Services.ServiceProducts; // Bu using'e burada gerek yok
+using FluentValidation; // ValidationException için
 using Microsoft.AspNetCore.Mvc;
-using System;
+using System; // KeyNotFoundException için
 using System.Collections.Generic;
-using System.Linq; // SelectMany için
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace CrmProject.Api.Controllers
 {
@@ -54,14 +55,10 @@ namespace CrmProject.Api.Controllers
             catch (ValidationException ex)
             {
                 // FluentValidation hatalarını yakala ve 400 Bad Request döndür
-                // Hata mesajlarını daha okunabilir bir formatta döndür
                 var errors = ex.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }).ToList();
                 return BadRequest(new { message = "Doğrulama hataları oluştu.", errors = errors });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = $"Sunucu hatası oluştu: {ex.Message}" });
-            }
+            // Genel 'catch (Exception ex)' bloğu kaldırıldı. Beklenmeyen diğer hatalar için varsayılan 500 dönecektir.
         }
 
         [HttpPut("{id}")]
@@ -75,43 +72,36 @@ namespace CrmProject.Api.Controllers
             try
             {
                 await _customerService.UpdateCustomerAsync(updateCustomerDto);
-                // Başarılı güncelleme için 204 No Content yanıtı döndürür (RESTful standart)
-                // Eğer burada da bir mesaj isterseniz, Ok(new { message = "Müşteri başarıyla güncellendi." }) döndürebilirsiniz.
-                return NoContent();
+                // Başarılı güncelleme için 200 OK yanıtı ile mesaj döndürülür.
+                return Ok(new { message = $"ID'si {id} olan müşteri başarıyla güncellendi." });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException) // KeyNotFoundException'ı yakalamaya devam ediyoruz
             {
                 return NotFound(new { message = $"ID'si {id} olan müşteri bulunamadı. Güncelleme yapılamadı." });
             }
-            catch (ValidationException ex)
+            catch (ValidationException ex) // ValidationException'ı yakalamaya devam ediyoruz
             {
                 var errors = ex.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }).ToList();
                 return BadRequest(new { message = "Doğrulama hataları oluştu.", errors = errors });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = $"Sunucu hatası oluştu: {ex.Message}" });
-            }
+            // Genel 'catch (Exception ex)' bloğu kaldırıldı. Beklenmeyen diğer hatalar için varsayılan 500 dönecektir.
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            try
+            // Önce müşterinin varlığını kontrol et
+            var existingCustomer = await _customerService.GetCustomerByIdAsync(id);
+            if (existingCustomer == null)
             {
-                await _customerService.DeleteCustomerAsync(id);
-                // Başarılı silme için 204 No Content yanıtı döndürür (RESTful standart)
-                // Eğer burada da bir mesaj isterseniz, Ok(new { message = "Müşteri başarıyla silindi." }) döndürebilirsiniz.
-                return NoContent();
-            }
-            catch (KeyNotFoundException)
-            {
+                // Müşteri bulunamazsa 404 Not Found döndürülür.
                 return NotFound(new { message = $"ID'si {id} olan müşteri bulunamadı. Silme yapılamadı." });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = $"Sunucu hatası oluştu: {ex.Message}" });
-            }
+
+            // Müşteri varsa silme işlemini çağır (Servis artık exception fırlatmayacak)
+            await _customerService.DeleteCustomerAsync(id);
+            // Başarılı silme için 200 OK yanıtı ile mesaj döndürülür.
+            return Ok(new { message = $"ID'si {id} olan müşteri başarıyla silindi." });
         }
     }
 }

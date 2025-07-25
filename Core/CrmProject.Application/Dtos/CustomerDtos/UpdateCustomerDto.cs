@@ -1,6 +1,6 @@
-﻿// CrmProject.Application/DTOs/UpdateCustomerDto.cs
+﻿
 
-namespace CrmProject.Application.DTOs
+namespace CrmProject.Application.DTOs.CustomerDtos
 {
     public class UpdateCustomerDto
     {

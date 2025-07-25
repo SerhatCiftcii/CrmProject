@@ -1,7 +1,7 @@
 ﻿// CrmProject.Application/MappingProfiles/CustomerMappingProfile.cs
 
 using AutoMapper;
-using CrmProject.Application.DTOs;
+using CrmProject.Application.DTOs.CustomerDtos;
 using CrmProject.Domain.Entities;
 
 namespace CrmProject.Application.MappingProfiles

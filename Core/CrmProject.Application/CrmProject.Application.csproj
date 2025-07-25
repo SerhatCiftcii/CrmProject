@@ -17,4 +17,8 @@
     <ProjectReference Include="..\CrmProject.Domain\CrmProject.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\Customer\" />
+  </ItemGroup>
+
 </Project>

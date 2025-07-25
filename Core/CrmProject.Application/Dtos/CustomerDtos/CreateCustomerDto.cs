@@ -1,6 +1,5 @@
-﻿// CrmProject.Application/DTOs/CreateCustomerDto.cs
-
-namespace CrmProject.Application.DTOs
+﻿
+namespace CrmProject.Application.DTOs.CustomerDtos
 {
     public class CreateCustomerDto
     {

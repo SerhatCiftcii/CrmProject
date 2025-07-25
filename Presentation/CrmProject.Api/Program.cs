@@ -4,6 +4,7 @@ using AutoMapper; // AutoMapper için eklendi
 using CrmProject.Application.Interfaces;
 using CrmProject.Application.MappingProfiles; // AutoMapper profilleri için eklendi
 using CrmProject.Application.Services; // CustomerService için eklendi
+using CrmProject.Application.Services.ServiceProducts;
 using CrmProject.Application.Validations; // CustomerValidator için eklendi
 using CrmProject.Infrastructure.Persistence.Context;
 
@@ -30,18 +31,22 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // AutoMapper servislerini ekliyoruz.
 // Birden fazla assembly'deki tüm Profile sınıflarını otomatik olarak bulur ve kaydeder.
 builder.Services.AddAutoMapper(new[] {
-    Assembly.GetExecutingAssembly(), // CrmProject.Api projesini tarar (eğer burada da profil varsa)
-    typeof(CustomerMappingProfile).Assembly // CrmProject.Application projesini tarar
-});
+   Assembly.GetExecutingAssembly(),
+        typeof(CustomerMappingProfile).Assembly, // CustomerMappingProfile'ın bulunduğu assembly
+        typeof(ProductMappingProfile).Assembly   // ProductMappingProfile'ın bulunduğu assembly
+    });
+
 
 // FluentValidation servislerini ekliyoruz.
 // Bu, Controller'larda otomatik doğrulama için gereklidir.
 builder.Services.AddFluentValidationAutoValidation();
 // Validatörleri otomatik kaydet
 builder.Services.AddValidatorsFromAssembly(typeof(CustomerValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(ProductValidator).Assembly);  // ProductValidator'ın bulunduğu assembly
 
 // Uygulama servislerini (Business Logic) konteynere ekliyoruz.
 builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 builder.Services.AddControllers();
 

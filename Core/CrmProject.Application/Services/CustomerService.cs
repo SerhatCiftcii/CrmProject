@@ -1,15 +1,21 @@
-﻿// CrmProject.Application/Services/CustomerService.cs
+﻿// CrmProject.Application/Services/Customer/CustomerService.cs
 
 using AutoMapper; // IMapper için
-using CrmProject.Application.DTOs; // DTO'lar için
+using CrmProject.Application.DTOs.CustomerDtos; // DTO'lar için
 using CrmProject.Application.Interfaces; // IUnitOfWork ve ICustomerService için
+using CrmProject.Application.Services.ServiceProducts;
 using CrmProject.Application.Validations; // CustomerValidator için
 using CrmProject.Domain.Entities; // Customer entity'si için
+using FluentValidation; // ValidationException için
+using System; // KeyNotFoundException için
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using FluentValidation; // IValidator için
 
-namespace CrmProject.Application.Services
+// Not: CrmProject.Application.Services.ServiceProducts using'i CustomerService içinde gerekli değildir.
+// using CrmProject.Application.Services.ServiceProducts;
+
+namespace CrmProject.Application.Services // Namespace güncellendi (Customer klasörü içindeki servis için)
 {
     public class CustomerService : ICustomerService
     {
@@ -58,8 +64,8 @@ namespace CrmProject.Application.Services
             var existingCustomer = await _unitOfWork.GetRepository<Customer>().GetByIdAsync(updateCustomerDto.Id);
             if (existingCustomer == null)
             {
-                // Müşteri bulunamazsa hata fırlat veya özel bir yanıt döndür.
-                // Burada basitçe null kontrolü yapıldı, daha sonra özel Exception'lar eklenebilir.
+                // Müşteri bulunamazsa KeyNotFoundException fırlatırız.
+                // Bu, Controller'da yakalanarak 404 Not Found yanıtına dönüşecektir.
                 throw new KeyNotFoundException($"Customer with ID {updateCustomerDto.Id} not found.");
             }
 
@@ -70,6 +76,7 @@ namespace CrmProject.Application.Services
             var validationResult = await _customerValidator.ValidateAsync(existingCustomer);
             if (!validationResult.IsValid)
             {
+                // Doğrulama başarısız olursa hata fırlat
                 throw new ValidationException(validationResult.Errors);
             }
 
@@ -79,15 +86,14 @@ namespace CrmProject.Application.Services
 
         public async Task DeleteCustomerAsync(int id)
         {
+            // Servis burada KeyNotFoundException fırlatmayacak.
+            // Controller zaten varlık kontrolünü yapacak.
             var customer = await _unitOfWork.GetRepository<Customer>().GetByIdAsync(id);
-            if (customer == null)
+            if (customer != null) // Sadece müşteri bulunursa silme işlemini yap
             {
-                // Müşteri bulunamazsa hata fırlat veya özel bir yanıt döndür.
-                throw new KeyNotFoundException($"Customer with ID {id} not found.");
+                _unitOfWork.GetRepository<Customer>().Remove(customer);
+                await _unitOfWork.SaveChangesAsync();
             }
-
-            _unitOfWork.GetRepository<Customer>().Remove(customer);
-            await _unitOfWork.SaveChangesAsync();
         }
     }
 }
