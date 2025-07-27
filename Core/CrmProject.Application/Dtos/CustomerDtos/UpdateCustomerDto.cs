@@ -1,5 +1,7 @@
 ﻿
 
+using CrmProject.Domain.Enums;
+
 namespace CrmProject.Application.DTOs.CustomerDtos
 {
     public class UpdateCustomerDto
@@ -18,5 +20,9 @@ namespace CrmProject.Application.DTOs.CustomerDtos
         public string WebSite { get; set; }
         public DateTime? SalesDate { get; set; }
         public bool IsActive { get; set; } // Güncelleme sırasında aktiflik durumu da değişebilir
+        public CustomerStatus Status { get; set; }
+
+        // Müşteriye atanacak/güncellenecek ürün ID'lerinin listesi
+        public List<int> ProductIds { get; set; }
     }
 }

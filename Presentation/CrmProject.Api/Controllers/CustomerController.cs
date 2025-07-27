@@ -1,15 +1,11 @@
-﻿// CrmProject.Api/Controllers/CustomerController.cs
-
-using CrmProject.Application.DTOs.CustomerDtos;
+﻿using CrmProject.Application.DTOs.CustomerDtos;
 using CrmProject.Application.Interfaces;
 using CrmProject.Application.Services.ServiceProducts;
-
-// using CrmProject.Application.Services.ServiceProducts; // Bu using'e burada gerek yok
-using FluentValidation; // ValidationException için
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using System; // KeyNotFoundException için
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace CrmProject.Api.Controllers
 {
@@ -36,72 +32,63 @@ namespace CrmProject.Api.Controllers
         {
             var customer = await _customerService.GetCustomerByIdAsync(id);
             if (customer == null)
-            {
-                // Müşteri bulunamazsa 404 Not Found yanıtı ile açıklayıcı bir mesaj döndürür
                 return NotFound(new { message = $"ID'si {id} olan müşteri bulunamadı." });
-            }
+
             return Ok(customer);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddCustomer([FromBody] CreateCustomerDto createCustomerDto)
+        public async Task<IActionResult> AddCustomer([FromBody] CreateCustomerDto dto)
         {
             try
             {
-                var addedCustomer = await _customerService.AddCustomerAsync(createCustomerDto);
-                // 201 Created yanıtı ile oluşturulan müşteriyi ve bir başarı mesajını döndürür
-                return CreatedAtAction(nameof(GetCustomerById), new { id = addedCustomer.Id }, new { message = "Müşteri başarıyla eklendi.", customer = addedCustomer });
+                var added = await _customerService.AddCustomerAsync(dto);
+                return CreatedAtAction(nameof(GetCustomerById), new { id = added.Id }, added);
             }
             catch (ValidationException ex)
             {
-                // FluentValidation hatalarını yakala ve 400 Bad Request döndür
-                var errors = ex.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }).ToList();
-                return BadRequest(new { message = "Doğrulama hataları oluştu.", errors = errors });
+                var errors = ex.Errors?.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }) ?? Enumerable.Empty<object>();
+
+                return BadRequest(new
+                {
+                    message = string.IsNullOrEmpty(ex.Message) ? "Doğrulama hataları oluştu" : ex.Message,
+                    errors
+                });
             }
-            // Genel 'catch (Exception ex)' bloğu kaldırıldı. Beklenmeyen diğer hatalar için varsayılan 500 dönecektir.
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] UpdateCustomerDto updateCustomerDto)
+
+            [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] UpdateCustomerDto dto)
         {
-            if (id != updateCustomerDto.Id)
-            {
-                return BadRequest(new { message = "URL'deki ID ile istek gövdesindeki ID uyuşmuyor." });
-            }
+            if (id != dto.Id)
+                return BadRequest(new { message = "ID uyuşmuyor" });
 
             try
             {
-                await _customerService.UpdateCustomerAsync(updateCustomerDto);
-                // Başarılı güncelleme için 200 OK yanıtı ile mesaj döndürülür.
-                return Ok(new { message = $"ID'si {id} olan müşteri başarıyla güncellendi." });
+                await _customerService.UpdateCustomerAsync(dto);
+                return Ok(new { message = "Müşteri güncellendi" });
             }
-            catch (KeyNotFoundException) // KeyNotFoundException'ı yakalamaya devam ediyoruz
+            catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = $"ID'si {id} olan müşteri bulunamadı. Güncelleme yapılamadı." });
+                return NotFound(new { message = ex.Message });
             }
-            catch (ValidationException ex) // ValidationException'ı yakalamaya devam ediyoruz
+            catch (ValidationException ex)
             {
-                var errors = ex.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }).ToList();
-                return BadRequest(new { message = "Doğrulama hataları oluştu.", errors = errors });
+                var errors = ex.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage });
+                return BadRequest(new { message = "Doğrulama hataları oluştu", errors });
             }
-            // Genel 'catch (Exception ex)' bloğu kaldırıldı. Beklenmeyen diğer hatalar için varsayılan 500 dönecektir.
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            // Önce müşterinin varlığını kontrol et
-            var existingCustomer = await _customerService.GetCustomerByIdAsync(id);
-            if (existingCustomer == null)
-            {
-                // Müşteri bulunamazsa 404 Not Found döndürülür.
-                return NotFound(new { message = $"ID'si {id} olan müşteri bulunamadı. Silme yapılamadı." });
-            }
+            var existing = await _customerService.GetCustomerByIdAsync(id);
+            if (existing == null)
+                return NotFound(new { message = "Müşteri bulunamadı" });
 
-            // Müşteri varsa silme işlemini çağır (Servis artık exception fırlatmayacak)
             await _customerService.DeleteCustomerAsync(id);
-            // Başarılı silme için 200 OK yanıtı ile mesaj döndürülür.
-            return Ok(new { message = $"ID'si {id} olan müşteri başarıyla silindi." });
+            return Ok(new { message = "Müşteri silindi" });
         }
     }
 }

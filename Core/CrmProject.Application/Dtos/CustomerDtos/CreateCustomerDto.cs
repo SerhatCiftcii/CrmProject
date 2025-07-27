@@ -1,4 +1,6 @@
 ﻿
+using CrmProject.Domain.Enums;
+
 namespace CrmProject.Application.DTOs.CustomerDtos
 {
     public class CreateCustomerDto
@@ -15,5 +17,9 @@ namespace CrmProject.Application.DTOs.CustomerDtos
         public string TaxOffice { get; set; }
         public string WebSite { get; set; }
         public DateTime? SalesDate { get; set; }
+        public CustomerStatus Status { get; set; }
+
+        // Müşteriye atanacak ürün ID'lerinin listesi
+        public List<int> ProductIds { get; set; }
     }
 }

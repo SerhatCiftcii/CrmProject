@@ -58,5 +58,30 @@ namespace CrmProject.Persistence.Repositories // Namespace güncellendi
         {
             return await _dbSet.AsNoTracking().Where(expression).ToListAsync();
         }
+        public async Task<IReadOnlyList<T>> GetAllWithIncludesAsync(params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+            return await query.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<T> GetByIdWithIncludesAsync(int id, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+            return await query.FirstOrDefaultAsync(e => e.Id == id);
+        }
+        public IQueryable<T> Query()
+        {
+            return _dbSet.AsQueryable();
+        }
+
+
     }
 }

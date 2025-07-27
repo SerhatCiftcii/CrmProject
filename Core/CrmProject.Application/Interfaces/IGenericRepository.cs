@@ -30,5 +30,12 @@ namespace CrmProject.Application.Interfaces
 
         // Birden fazla entity'yi siler.
         void RemoveRange(IEnumerable<T> entities);
+        // İlişkili navigation property'leri Include ederek tüm entity'leri getirir.
+        Task<IReadOnlyList<T>> GetAllWithIncludesAsync(params Expression<Func<T, object>>[] includes);
+
+        // İlişkili navigation property'leri Include ederek ID'ye göre entity getirir.
+        Task<T> GetByIdWithIncludesAsync(int id, params Expression<Func<T, object>>[] includes);
+        IQueryable<T> Query();
+
     }
 }

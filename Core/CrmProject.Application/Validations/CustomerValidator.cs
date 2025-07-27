@@ -44,9 +44,12 @@ namespace CrmProject.Application.Validations
             RuleFor(x => x.WebSite)
                 .MaximumLength(250).WithMessage("Web sitesi en fazla 250 karakter olabilir.");
 
+            RuleFor(x => x.Status)
+                .IsInEnum().WithMessage("Geçerli bir müşteri durumu seçilmelidir."); // Enum değerinin geçerli olup olmadığını kontrol eder.
+
             // IsActive alanı için de bir kural ekleyebiliriz, örneğin null olamaz gibi.
-           /* RuleFor(x => x.IsActive)
-                .NotNull().WithMessage("Aktiflik durumu belirtilmelidir.");*/
+            /* RuleFor(x => x.IsActive)
+                 .NotNull().WithMessage("Aktiflik durumu belirtilmelidir.");*/
         }
     }
 }
