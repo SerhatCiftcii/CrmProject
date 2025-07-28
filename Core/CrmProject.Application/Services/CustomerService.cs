@@ -57,6 +57,13 @@ namespace CrmProject.Application.Services
         {
             var customer = _mapper.Map<Customer>(createCustomerDto);
 
+            //  Önce aynı email var mı kontrol et
+            var emailExists = await _unitOfWork.GetRepository<Customer>()
+                .Query()
+                .AnyAsync(c => c.Email == createCustomerDto.Email);
+            if (emailExists)
+                throw new ValidationException("Bu email adresi zaten kayıtlı.");
+
             //  Customer alanlarını doğrula
             var validationResult = await _customerValidator.ValidateAsync(customer);
             if (!validationResult.IsValid)
@@ -75,7 +82,7 @@ namespace CrmProject.Application.Services
                 if (missingIds.Any())
                     throw new ValidationException($"Şu ID'lere sahip ürün(ler) bulunamadı: {string.Join(",", missingIds)}");
 
-                // işkileri oluştur
+                //  İlişkileri oluştur
                 customer.CustomerProducts = existingProductIds
                     .Select(pid => new CustomerProduct
                     {
@@ -92,6 +99,7 @@ namespace CrmProject.Application.Services
             return _mapper.Map<CustomerDto>(customer);
         }
 
+
         //  MÜŞTERİ GÜNCELLER (ÜRÜN ID DOĞRULAMALI)
         public async Task UpdateCustomerAsync(UpdateCustomerDto updateCustomerDto)
         {
@@ -101,6 +109,13 @@ namespace CrmProject.Application.Services
             var existingCustomer = await customerRepo.GetByIdWithIncludesAsync(updateCustomerDto.Id, c => c.CustomerProducts);
             if (existingCustomer == null)
                 throw new KeyNotFoundException($"Customer with ID {updateCustomerDto.Id} not found.");
+
+            //  Aynı email başka müşteri tarafından kullanılıyor mu kontrol et
+            var emailExists = await _unitOfWork.GetRepository<Customer>()
+                .Query()
+                .AnyAsync(c => c.Email == updateCustomerDto.Email && c.Id != updateCustomerDto.Id);
+            if (emailExists)
+                throw new ValidationException("Bu email adresi başka bir müşteri tarafından kullanılıyor.");
 
             //  DTO'dan gelen alanları map et
             _mapper.Map(updateCustomerDto, existingCustomer);

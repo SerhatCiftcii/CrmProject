@@ -51,12 +51,18 @@ namespace CrmProject.Infrastructure.Persistence.Context
                 entity.Property(c => c.CompanyName).IsRequired().HasMaxLength(250);
                 entity.Property(c => c.Email).HasMaxLength(100);
                 entity.HasIndex(c => c.Email).IsUnique();
-                entity.Property(c => c.TaxNumber).HasMaxLength(50);
-                entity.HasIndex(c => c.TaxNumber).IsUnique();
+                entity.Property(c => c.TaxNumber).HasMaxLength(50).IsRequired(false);
+                // entity.HasIndex(c => c.TaxNumber).IsUnique();
                 entity.Property(c => c.SalesDate).IsRequired(false);
                 entity.Property(c => c.Address).HasMaxLength(500);
                 entity.HasMany(c => c.AuthorizedPeople).WithOne(ap => ap.Customer).OnDelete(DeleteBehavior.Cascade);
                 entity.HasMany(c => c.Maintenances).WithOne(m => m.Customer).OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(c => c.CustomerProducts)
+                      .WithOne(cp => cp.Customer)
+                      .HasForeignKey(cp => cp.CustomerId)
+                      .OnDelete(DeleteBehavior.Cascade); // <<< Önceki Restrict yerine Cascade geldi
+
                 entity.HasMany(c => c.ContactLogs).WithOne(cl => cl.Customer).OnDelete(DeleteBehavior.Cascade);
                 entity.HasMany(c => c.Documents).WithOne(d => d.Customer).OnDelete(DeleteBehavior.Cascade);
                 entity.HasMany(c => c.CustomerChangeLogs).WithOne(ccl => ccl.Customer).OnDelete(DeleteBehavior.Cascade);
@@ -78,8 +84,14 @@ namespace CrmProject.Infrastructure.Persistence.Context
 
             modelBuilder.Entity<CustomerProduct>(entity =>
             {
-                entity.HasOne(cp => cp.Customer).WithMany(c => c.CustomerProducts).OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(cp => cp.Product).WithMany(p => p.CustomerProducts).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(cp => cp.Customer)
+      .WithMany(c => c.CustomerProducts)
+      .OnDelete(DeleteBehavior.Cascade);   
+
+                entity.HasOne(cp => cp.Product)
+                      .WithMany(p => p.CustomerProducts)
+                      .OnDelete(DeleteBehavior.Restrict);  
+
                 entity.Property(cp => cp.AssignedDate).IsRequired();
             });
 
