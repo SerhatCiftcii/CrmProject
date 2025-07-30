@@ -1,87 +1,32 @@
-﻿// CrmProject.Persistence/Repositories/GenericRepository.cs
-
-using CrmProject.Application.Interfaces;
-using CrmProject.Domain.Entities;
+﻿using CrmProject.Application.Interfaces;
 using CrmProject.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace CrmProject.Persistence.Repositories // Namespace güncellendi
+namespace CrmProject.Persistence.Repositories
 {
-    public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
+    public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
-        protected readonly AppDbContext _context;
-        protected readonly DbSet<T> _dbSet;
+        protected readonly AppDbContext Context;
+        protected readonly DbSet<T> DbSet;
 
         public GenericRepository(AppDbContext context)
         {
-            _context = context;
-            _dbSet = _context.Set<T>();
+            Context = context;
+            DbSet = context.Set<T>();
         }
 
-        public async Task AddAsync(T entity)
-        {
-            await _dbSet.AddAsync(entity);
-        }
+        public IQueryable<T> GetAll() => DbSet.AsNoTracking();
 
-        public async Task AddRangeAsync(IEnumerable<T> entities)
-        {
-            await _dbSet.AddRangeAsync(entities);
-        }
+        public IQueryable<T> Where(Expression<Func<T, bool>> predicate)
+            => DbSet.Where(predicate).AsNoTracking();
 
-        public async Task<IReadOnlyList<T>> GetAllAsync()
-        {
-            return await _dbSet.AsNoTracking().ToListAsync();
-        }
+        public ValueTask<T?> GetByIdAsync(int id) => DbSet.FindAsync(id);
 
-        public async Task<T> GetByIdAsync(int id)
-        {
-            return await _dbSet.FindAsync(id);
-        }
+        public async ValueTask AddAsync(T entity) => await DbSet.AddAsync(entity);
 
-        public void Remove(T entity)
-        {
-            _dbSet.Remove(entity);
-        }
+        public void Update(T entity) => DbSet.Update(entity);
 
-        public void RemoveRange(IEnumerable<T> entities)
-        {
-            _dbSet.RemoveRange(entities);
-        }
-
-        public void Update(T entity)
-        {
-            _dbSet.Update(entity);
-        }
-
-        public async Task<IReadOnlyList<T>> GetWhereAsync(Expression<Func<T, bool>> expression)
-        {
-            return await _dbSet.AsNoTracking().Where(expression).ToListAsync();
-        }
-        public async Task<IReadOnlyList<T>> GetAllWithIncludesAsync(params Expression<Func<T, object>>[] includes)
-        {
-            IQueryable<T> query = _dbSet;
-            foreach (var include in includes)
-            {
-                query = query.Include(include);
-            }
-            return await query.AsNoTracking().ToListAsync();
-        }
-
-        public async Task<T> GetByIdWithIncludesAsync(int id, params Expression<Func<T, object>>[] includes)
-        {
-            IQueryable<T> query = _dbSet;
-            foreach (var include in includes)
-            {
-                query = query.Include(include);
-            }
-            return await query.FirstOrDefaultAsync(e => e.Id == id);
-        }
-        public IQueryable<T> Query()
-        {
-            return _dbSet.AsQueryable();
-        }
-
-
+        public void Delete(T entity) => DbSet.Remove(entity);
     }
 }

@@ -26,8 +26,9 @@ builder.Services.AddDbContext<AppDbContext>();
 
 // Repository ve Unit of Work servislerini konteynere ekliyoruz.
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 // AutoMapper servislerini ekliyoruz.
 // Birden fazla assembly'deki tüm Profile sınıflarını otomatik olarak bulur ve kaydeder.
 builder.Services.AddAutoMapper(new[] {

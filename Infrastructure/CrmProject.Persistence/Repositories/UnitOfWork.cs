@@ -1,10 +1,7 @@
-﻿// CrmProject.Persistence/Repositories/UnitOfWork.cs
-
-using CrmProject.Application.Interfaces;
-using CrmProject.Domain.Entities;
+﻿using CrmProject.Application.Interfaces;
 using CrmProject.Infrastructure.Persistence.Context;
 
-namespace CrmProject.Persistence.Repositories // Namespace güncellendi
+namespace CrmProject.Persistence.Repositories
 {
     public class UnitOfWork : IUnitOfWork
     {
@@ -15,14 +12,6 @@ namespace CrmProject.Persistence.Repositories // Namespace güncellendi
             _context = context;
         }
 
-        public IGenericRepository<T> GetRepository<T>() where T : BaseEntity
-        {
-            return new GenericRepository<T>(_context);
-        }
-
-        public async Task<int> SaveChangesAsync()
-        {
-            return await _context.SaveChangesAsync();
-        }
+        public async Task<int> SaveChangesAsync() => await _context.SaveChangesAsync();
     }
 }
