@@ -12,7 +12,10 @@ namespace CrmProject.Application.Validations
     {
         public AuthorizedPersonValidator()
         {
-            RuleFor(x => x.Id).GreaterThan(0).WithMessage("ID geçerli olmalıdır.");
+            RuleFor(x => x.Id)
+     .GreaterThan(0)
+     .When(x => x.Id != 0)
+     .WithMessage("ID geçerli olmalıdır.");
 
             RuleFor(x=>x.FullName).NotEmpty().WithMessage("Ad Soyad alanı boş bırakılamaz")
                 .MaximumLength(100).WithMessage("Ad Soyad alanı en fazla 100 karakter olmalıdır.");

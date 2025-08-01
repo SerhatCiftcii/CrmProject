@@ -15,7 +15,8 @@ namespace CrmProject.Application.Services.AuthorizedPersonServices
         // Belirli bir ID'ye sahip yetkili kişiyi getirir. Eğer kişi bulunamazsa null döndürür.
         Task<AuthorizedPersonDto?> GetAuthorizedPersonByIdAsync(int id);
 
-        Task AddAuthorizedPersonAsync(UpdateAuthorizedPersonDto updateAuthorizedPersonDto );
+        Task UpdateAuthorizedPersonAsync(UpdateAuthorizedPersonDto updateAuthorizedPersonDto);
+        Task<AuthorizedPersonDto> AddAuthorizedPersonAsync(CreateAuthorizedPersonDto  createAuthorizedPersonDto );
 
         // Belirli bir ID'ye sahip yetkili kişiyi siler.
         Task DeleteAuthorizedPersonAsync(int id);

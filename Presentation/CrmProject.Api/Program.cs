@@ -4,6 +4,7 @@ using AutoMapper; // AutoMapper için eklendi
 using CrmProject.Application.Interfaces;
 using CrmProject.Application.MappingProfiles; // AutoMapper profilleri için eklendi
 using CrmProject.Application.Services; // CustomerService için eklendi
+using CrmProject.Application.Services.AuthorizedPersonServices;
 using CrmProject.Application.Services.ServiceProducts;
 using CrmProject.Application.Validations; // CustomerValidator için eklendi
 using CrmProject.Infrastructure.Persistence.Context;
@@ -27,6 +28,9 @@ builder.Services.AddDbContext<AppDbContext>();
 // Repository ve Unit of Work servislerini konteynere ekliyoruz.
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IAuthorizedPersonService, AuthorizedPersonService>();
+builder.Services.AddScoped<IAuthorizedPersonRepository, AuthorizedPersonRepository>();
+
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 // AutoMapper servislerini ekliyoruz.
@@ -44,6 +48,7 @@ builder.Services.AddFluentValidationAutoValidation();
 // Validatörleri otomatik kaydet
 builder.Services.AddValidatorsFromAssembly(typeof(CustomerValidator).Assembly);
 builder.Services.AddValidatorsFromAssembly(typeof(ProductValidator).Assembly);  // ProductValidator'ın bulunduğu assembly
+builder.Services.AddScoped<AuthorizedPersonValidator>();
 
 // Uygulama servislerini (Business Logic) konteynere ekliyoruz.
 builder.Services.AddScoped<ICustomerService, CustomerService>();
