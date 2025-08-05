@@ -9,6 +9,7 @@ public class MaintenanceProfile : Profile
     {
         //  Maintenance -> MaintenanceDetailDto
         CreateMap<Maintenance, MaintenanceDetailDto>()
+             .ForMember(dest => dest.CompanyName, opt => opt.MapFrom(src => src.Customer.CompanyName)) 
             .ForMember(dest => dest.OfferStatus, opt => opt.MapFrom(src => src.OfferStatus.ToString()))
             .ForMember(dest => dest.ContractStatus, opt => opt.MapFrom(src => src.ContractStatus.ToString()))
             .ForMember(dest => dest.LicenseStatus, opt => opt.MapFrom(src => src.LicenseStatus.ToString()))

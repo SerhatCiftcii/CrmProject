@@ -97,8 +97,15 @@ namespace CrmProject.Infrastructure.Persistence.Context
 
             modelBuilder.Entity<MaintenanceProduct>(entity =>
             {
-                entity.HasOne(mp => mp.Maintenance).WithMany(m => m.MaintenanceProducts).OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(mp => mp.Product).WithMany(p => p.MaintenanceProducts).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(mp => mp.Maintenance)
+                    .WithMany(m => m.MaintenanceProducts)
+                    .HasForeignKey(mp => mp.MaintenanceId)
+                    .OnDelete(DeleteBehavior.Cascade); //  Child kayıtlar parent ile birlikte silinir
+
+                entity.HasOne(mp => mp.Product)
+                    .WithMany(p => p.MaintenanceProducts)
+                    .HasForeignKey(mp => mp.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict); //  Ürünler silinirse bakım ürünleri etkilenmesin
             });
 
             modelBuilder.Entity<Maintenance>(entity =>
