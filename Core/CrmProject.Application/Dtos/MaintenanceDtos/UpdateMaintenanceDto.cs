@@ -1,27 +1,27 @@
-﻿// CrmProject.Domain/Entities/Maintenance.cs
-using CrmProject.Domain.Enums; // Enum'ları kullanmak için
+﻿using CrmProject.Domain.Enums;
+using System;
+using System.Collections.Generic;
 
-namespace CrmProject.Domain.Entities
+namespace CrmProject.Application.Dtos.MaintenanceDtos
 {
-    public class Maintenance : BaseEntity
+    public class UpdateMaintenanceDto
     {
-        public int CustomerId { get; set; } // Foreign Key
-        public Customer Customer { get; set; } // Navigation Property
-
+        public int Id { get; set; } // Güncelleme işlemi için Id gereklidir.
+        public int CustomerId { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public DateTime? PassportCreatedDate { get; set; }
-
         public OfferStatus OfferStatus { get; set; }
         public ContractStatus ContractStatus { get; set; }
         public LicenseStatus LicenseStatus { get; set; }
         public FirmSituation FirmSituation { get; set; }
 
+        // Alan, entity ile uyumlu olması için nullable yapıldı.
         public string? Description { get; set; }
         public bool ExtendBy6Months { get; set; }
         public bool ExtendBy1Year { get; set; }
 
-        // Navigation Property for Many-to-Many
-        public ICollection<MaintenanceProduct> MaintenanceProducts { get; set; }
+        // Varsayılan olarak boş bir liste atanarak null referans hataları engellendi.
+        public List<int> ProductIds { get; set; } = new List<int>();
     }
 }
