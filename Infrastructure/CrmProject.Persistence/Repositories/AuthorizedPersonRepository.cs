@@ -12,7 +12,7 @@ namespace CrmProject.Persistence.Repositories
     public class AuthorizedPersonRepository :GenericRepository<AuthorizedPerson>, IAuthorizedPersonRepository
     {
         public AuthorizedPersonRepository(AppDbContext context) : base(context) { }
-        // Burada AuthorizedPerson'a özel metotlar ekleyebilirsin.
+        // Burada AuthorizedPerson'a özel metotlar
         // Örneğin, yetkili kişilerin belirli bir kritere göre filtrelenmesi gibi.
     }
 }

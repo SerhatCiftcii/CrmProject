@@ -1,6 +1,7 @@
 ﻿using CrmProject.Application.Dtos.AuthorizedPersonDtos;
 using CrmProject.Application.Services.AuthorizedPersonServices;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace CrmProject.WebAPI.Controllers
         {
             _authorizedPersonService = authorizedPersonService;
         }
-
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {

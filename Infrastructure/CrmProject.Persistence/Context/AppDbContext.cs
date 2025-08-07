@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace CrmProject.Infrastructure.Persistence.Context
 {
-    public class AppDbContext : IdentityDbContext<AppUser>
+    public class AppDbContext : IdentityDbContext<AppUser,AppRole,string>
     {
         // Parametresiz constructor, migration araçları için gereklidir.
         public AppDbContext() { }
