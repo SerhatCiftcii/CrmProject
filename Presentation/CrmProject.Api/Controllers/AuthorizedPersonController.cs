@@ -4,6 +4,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CrmProject.WebAPI.Controllers
@@ -77,5 +78,18 @@ namespace CrmProject.WebAPI.Controllers
             await _authorizedPersonService.DeleteAuthorizedPersonAsync(id);
             return Ok(new { message = $"ID'si {id} olan yetkili kişi başarıyla silindi." });
         }
+        [Authorize]
+        [HttpPatch("toggle-status")]
+  public async Task<IActionResult> ToggleStatus([FromBody] ToggleAuthorizedPersonDto dto)
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var message = await _authorizedPersonService.ToggleStatusAsync(currentUserId, dto);
+
+            if (message == "Durum başarıyla güncellendi.")
+                return Ok(new { message });
+
+            return BadRequest(new { message });
+        }
+
     }
 }

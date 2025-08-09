@@ -20,5 +20,8 @@ namespace CrmProject.Application.Services.AuthorizedPersonServices
 
         // Belirli bir ID'ye sahip yetkili kişiyi siler.
         Task DeleteAuthorizedPersonAsync(int id);
+
+        Task<string> ToggleStatusAsync(string curentUserId, ToggleAuthorizedPersonDto dto);
     }
 }
+    

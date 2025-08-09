@@ -4,9 +4,7 @@ using CrmProject.Application.Interfaces;
 using CrmProject.Application.Validations;
 using CrmProject.Domain.Entities;
 using FluentValidation;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace CrmProject.Application.Services.AuthorizedPersonServices
 {
@@ -14,6 +12,7 @@ namespace CrmProject.Application.Services.AuthorizedPersonServices
     {
         private readonly IAuthorizedPersonRepository _authorizedPersonRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly UserManager<AppUser> _userManager;
         private readonly IMapper _mapper;
         private readonly AuthorizedPersonValidator _validator;
 
@@ -21,12 +20,14 @@ namespace CrmProject.Application.Services.AuthorizedPersonServices
             IAuthorizedPersonRepository authorizedPersonRepository,
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            AuthorizedPersonValidator validator)
+            AuthorizedPersonValidator validator,
+            UserManager<AppUser> userManager)
         {
             _authorizedPersonRepository = authorizedPersonRepository;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _validator = validator;
+            _userManager = userManager;
         }
 
         public async Task<List<AuthorizedPersonDto>> GetAllAuthorizedPersonAsync()
@@ -46,9 +47,6 @@ namespace CrmProject.Application.Services.AuthorizedPersonServices
 
         public async Task<AuthorizedPersonDto> AddAuthorizedPersonAsync(CreateAuthorizedPersonDto dto)
         {
-            if (_authorizedPersonRepository.Where(ap => ap.Email == dto.Email).Any())
-                throw new ValidationException("Bu email adresi zaten kayıtlı.");
-
             var authorizedPerson = _mapper.Map<AuthorizedPerson>(dto);
 
             var validationResult = await _validator.ValidateAsync(authorizedPerson);
@@ -66,9 +64,6 @@ namespace CrmProject.Application.Services.AuthorizedPersonServices
             var authorizedPerson = await _authorizedPersonRepository.GetByIdAsync(dto.Id);
             if (authorizedPerson == null)
                 throw new KeyNotFoundException($"ID'si {dto.Id} olan yetkili kişi bulunamadı.");
-
-            if (_authorizedPersonRepository.Where(ap => ap.Email == dto.Email && ap.Id != dto.Id).Any())
-                throw new ValidationException("Bu email başka bir yetkili kişi tarafından kullanılıyor.");
 
             _mapper.Map(dto, authorizedPerson);
 
@@ -88,6 +83,23 @@ namespace CrmProject.Application.Services.AuthorizedPersonServices
                 _authorizedPersonRepository.Delete(authorizedPerson);
                 await _unitOfWork.SaveChangesAsync();
             }
+        }
+
+        public async Task<string> ToggleStatusAsync(string currentUserId, ToggleAuthorizedPersonDto dto)
+        {
+            var currentUser = await _userManager.FindByIdAsync(currentUserId);
+            if (currentUser == null || !currentUser.IsSuperAdmin)
+                return "Bu işlemi yapmaya yetkiniz yok.";
+
+            var person = await _authorizedPersonRepository.GetByIdAsync(dto.Id);
+            if (person == null)
+                return "Yetkili kişi bulunamadı.";
+
+            person.IsActive = dto.IsActive;
+            _authorizedPersonRepository.Update(person);
+            await _unitOfWork.SaveChangesAsync();
+
+            return "Durum başarıyla güncellendi.";
         }
     }
 }

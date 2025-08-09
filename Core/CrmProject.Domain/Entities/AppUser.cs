@@ -12,6 +12,8 @@ namespace CrmProject.Domain.Entities
         // Navigation Properties (Bu AppUser'ın oluşturduğu loglar)
         public ICollection<ChangeLog> ChangeLogs { get; set; }
         public ICollection<ContactLog> ContactLogs { get; set; } 
-        public ICollection<CustomerChangeLog> CustomerChangeLogs { get; set; } 
+        public ICollection<CustomerChangeLog> CustomerChangeLogs { get; set; }
+
+        public ICollection<AuthorizedPerson> AuthorizedPersons { get; set; }
     }
 }

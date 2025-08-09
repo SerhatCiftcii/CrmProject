@@ -11,10 +11,11 @@ namespace CrmProject.Application.Dtos.AuthorizedPersonDtos
         public int CustomerId { get; set; } // Zorunlu: Hangi müşteriye ait olduğu
         public string FullName { get; set; }
         public string Title { get; set; }
-        public string Email { get; set; }
-        public string Phone { get; set; }
+      
         public DateTime? BirthDate { get; set; }
         public bool IsActive { get; set; }
         public string Notes { get; set; }
+
+        public string AppUserId { get; set; } // BURASI YENİ
     }
 }
