@@ -11,9 +11,8 @@ namespace CrmProject.Application.Mapping
     {
         public AuthorizedPersonMapperProfile()
         {
-            // AuthorizedPerson entity'sinden AuthorizedPersonDto'ya dönüşüm kuralı.
-            // Bu, veritabanından alınan verinin dışarıya sunulacak hale getirilmesini sağlar.
             CreateMap<AuthorizedPerson, AuthorizedPersonDto>().ReverseMap();
+                    
 
             // CreateAuthorizedPersonDto'dan AuthorizedPerson entity'sine dönüşüm kuralı.
             // Bu, kullanıcıdan gelen yeni yetkili kişi bilgilerinin veritabanına kaydedilecek hale getirilmesini sağlar.

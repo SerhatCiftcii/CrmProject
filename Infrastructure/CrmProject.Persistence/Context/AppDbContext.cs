@@ -73,11 +73,7 @@ namespace CrmProject.Infrastructure.Persistence.Context
                 entity.Property(ap => ap.FullName).IsRequired().HasMaxLength(250);
                 entity.Property(ap => ap.Notes).HasMaxLength(1000);
 
-                // EKLENECEK: AppUser ilişkisi
-                entity.HasOne(ap => ap.AppUser)
-                      .WithMany(u => u.AuthorizedPersons)
-                      .HasForeignKey(ap => ap.AppUserId)
-                      .OnDelete(DeleteBehavior.Restrict); // Veya Cascade, ihtiyaca göre
+             
             });
 
             modelBuilder.Entity<Product>(entity =>

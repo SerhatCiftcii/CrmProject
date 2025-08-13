@@ -4,7 +4,7 @@ using CrmProject.Application.Interfaces;
 using CrmProject.Application.Validations;
 using CrmProject.Domain.Entities;
 using FluentValidation;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace CrmProject.Application.Services.AuthorizedPersonServices
 {
@@ -12,7 +12,6 @@ namespace CrmProject.Application.Services.AuthorizedPersonServices
     {
         private readonly IAuthorizedPersonRepository _authorizedPersonRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<AppUser> _userManager;
         private readonly IMapper _mapper;
         private readonly AuthorizedPersonValidator _validator;
 
@@ -20,86 +19,70 @@ namespace CrmProject.Application.Services.AuthorizedPersonServices
             IAuthorizedPersonRepository authorizedPersonRepository,
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            AuthorizedPersonValidator validator,
-            UserManager<AppUser> userManager)
+            AuthorizedPersonValidator validator)
         {
             _authorizedPersonRepository = authorizedPersonRepository;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _validator = validator;
-            _userManager = userManager;
         }
 
         public async Task<List<AuthorizedPersonDto>> GetAllAuthorizedPersonAsync()
         {
-            var authorizedPersons = _authorizedPersonRepository.GetAll().ToList();
-            return _mapper.Map<List<AuthorizedPersonDto>>(authorizedPersons);
+            var list = await _authorizedPersonRepository.GetAll()
+                .Include(ap => ap.Customer)
+                .ToListAsync();
+
+            return _mapper.Map<List<AuthorizedPersonDto>>(list);
         }
 
         public async Task<AuthorizedPersonDto?> GetAuthorizedPersonByIdAsync(int id)
         {
-            var authorizedPerson = await _authorizedPersonRepository.GetByIdAsync(id);
-            if (authorizedPerson == null)
-                return null;
+            var entity = await _authorizedPersonRepository.GetAll()
+                .Include(ap => ap.Customer)
+                .FirstOrDefaultAsync(ap => ap.Id == id);
 
-            return _mapper.Map<AuthorizedPersonDto>(authorizedPerson);
+            if (entity == null) return null;
+            return _mapper.Map<AuthorizedPersonDto>(entity);
         }
 
         public async Task<AuthorizedPersonDto> AddAuthorizedPersonAsync(CreateAuthorizedPersonDto dto)
         {
-            var authorizedPerson = _mapper.Map<AuthorizedPerson>(dto);
+            var entity = _mapper.Map<AuthorizedPerson>(dto);
 
-            var validationResult = await _validator.ValidateAsync(authorizedPerson);
+            var validationResult = await _validator.ValidateAsync(entity);
             if (!validationResult.IsValid)
                 throw new ValidationException(validationResult.Errors);
 
-            await _authorizedPersonRepository.AddAsync(authorizedPerson);
+            await _authorizedPersonRepository.AddAsync(entity);
             await _unitOfWork.SaveChangesAsync();
 
-            return _mapper.Map<AuthorizedPersonDto>(authorizedPerson);
+            return _mapper.Map<AuthorizedPersonDto>(entity);
         }
 
         public async Task UpdateAuthorizedPersonAsync(UpdateAuthorizedPersonDto dto)
         {
-            var authorizedPerson = await _authorizedPersonRepository.GetByIdAsync(dto.Id);
-            if (authorizedPerson == null)
-                throw new KeyNotFoundException($"ID'si {dto.Id} olan yetkili kişi bulunamadı.");
+            var entity = await _authorizedPersonRepository.GetByIdAsync(dto.Id);
+            if (entity == null) throw new KeyNotFoundException($"ID {dto.Id} bulunamadı.");
 
-            _mapper.Map(dto, authorizedPerson);
+            _mapper.Map(dto, entity);
 
-            var validationResult = await _validator.ValidateAsync(authorizedPerson);
+            var validationResult = await _validator.ValidateAsync(entity);
             if (!validationResult.IsValid)
                 throw new ValidationException(validationResult.Errors);
 
-            _authorizedPersonRepository.Update(authorizedPerson);
+            _authorizedPersonRepository.Update(entity);
             await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task DeleteAuthorizedPersonAsync(int id)
         {
-            var authorizedPerson = await _authorizedPersonRepository.GetByIdAsync(id);
-            if (authorizedPerson != null)
+            var entity = await _authorizedPersonRepository.GetByIdAsync(id);
+            if (entity != null)
             {
-                _authorizedPersonRepository.Delete(authorizedPerson);
+                _authorizedPersonRepository.Delete(entity);
                 await _unitOfWork.SaveChangesAsync();
             }
-        }
-
-        public async Task<string> ToggleStatusAsync(string currentUserId, ToggleAuthorizedPersonDto dto)
-        {
-            var currentUser = await _userManager.FindByIdAsync(currentUserId);
-            if (currentUser == null || !currentUser.IsSuperAdmin)
-                return "Bu işlemi yapmaya yetkiniz yok.";
-
-            var person = await _authorizedPersonRepository.GetByIdAsync(dto.Id);
-            if (person == null)
-                return "Yetkili kişi bulunamadı.";
-
-            person.IsActive = dto.IsActive;
-            _authorizedPersonRepository.Update(person);
-            await _unitOfWork.SaveChangesAsync();
-
-            return "Durum başarıyla güncellendi.";
         }
     }
 }

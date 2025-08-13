@@ -4,7 +4,6 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CrmProject.WebAPI.Controllers
@@ -19,6 +18,7 @@ namespace CrmProject.WebAPI.Controllers
         {
             _authorizedPersonService = authorizedPersonService;
         }
+
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -38,6 +38,7 @@ namespace CrmProject.WebAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> Create([FromBody] CreateAuthorizedPersonDto dto)
         {
             try
@@ -52,6 +53,7 @@ namespace CrmProject.WebAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateAuthorizedPersonDto dto)
         {
             if (id != dto.Id)
@@ -73,23 +75,17 @@ namespace CrmProject.WebAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> Delete(int id)
         {
+            // Önce ürünün varlığını kontrol et
+            var existingProduct = await _authorizedPersonService.GetAuthorizedPersonByIdAsync(id);
+            if (existingProduct == null)
+            {
+                return NotFound(new { message = $"ID'si {id} olan ürün bulunamadı. Silme yapılamadı." });
+            }
             await _authorizedPersonService.DeleteAuthorizedPersonAsync(id);
             return Ok(new { message = $"ID'si {id} olan yetkili kişi başarıyla silindi." });
         }
-        [Authorize]
-        [HttpPatch("toggle-status")]
-  public async Task<IActionResult> ToggleStatus([FromBody] ToggleAuthorizedPersonDto dto)
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var message = await _authorizedPersonService.ToggleStatusAsync(currentUserId, dto);
-
-            if (message == "Durum başarıyla güncellendi.")
-                return Ok(new { message });
-
-            return BadRequest(new { message });
-        }
-
     }
 }

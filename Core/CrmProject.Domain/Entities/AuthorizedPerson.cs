@@ -8,12 +8,11 @@ namespace CrmProject.Domain.Entities
 
         public string FullName { get; set; }
         public string Title { get; set; }
-       
+        public string Phone { get; set; }
+        public string Email { get; set; }
         public DateTime? BirthDate { get; set; }
-        public bool IsActive { get; set; }
         public string Notes { get; set; }
 
-        public string? AppUserId { get; set; } // AppUser tablosunun PK’si string
-        public AppUser AppUser { get; set; }
+        public bool IsActive { get; set; } = true; // Aktif/pasif durumu
     }
 }

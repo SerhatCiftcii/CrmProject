@@ -33,8 +33,7 @@ namespace CrmProject.Application.Validations
             RuleFor(x => x.CustomerId)
                 .GreaterThan(0).WithMessage("Müşteri ID'si geçerli bir değer olmalıdır.");
 
-            RuleFor(x => x.AppUserId)
-    .NotEmpty().WithMessage("Kullanıcı ID boş olamaz.");
+       
 
         }
     }

@@ -8,7 +8,7 @@ namespace CrmProject.Application.Dtos.AuthorizedPersonDtos
 {
     public class ToggleAuthorizedPersonDto
     {
-        public int Id { get; set; }
+        public string AppUserId { get; set; }
         public bool IsActive { get; set; }
     }
 }

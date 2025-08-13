@@ -104,7 +104,7 @@ builder.Services.AddValidatorsFromAssembly(typeof(ProductValidator).Assembly);  
 
 //  MaintenanceValidator kaydı
 builder.Services.AddValidatorsFromAssembly(typeof(MaintenanceValidator).Assembly);
-
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<AuthorizedPersonValidator>();
 
 // Uygulama servislerini (Business Logic) konteynere ekliyoruz.

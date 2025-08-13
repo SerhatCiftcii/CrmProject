@@ -11,17 +11,10 @@ namespace CrmProject.Application.Services.AuthorizedPersonServices
     public interface IAuthorizedPersonService 
     {
         Task<List<AuthorizedPersonDto>> GetAllAuthorizedPersonAsync();
-
-        // Belirli bir ID'ye sahip yetkili kişiyi getirir. Eğer kişi bulunamazsa null döndürür.
         Task<AuthorizedPersonDto?> GetAuthorizedPersonByIdAsync(int id);
-
-        Task UpdateAuthorizedPersonAsync(UpdateAuthorizedPersonDto updateAuthorizedPersonDto);
-        Task<AuthorizedPersonDto> AddAuthorizedPersonAsync(CreateAuthorizedPersonDto  createAuthorizedPersonDto );
-
-        // Belirli bir ID'ye sahip yetkili kişiyi siler.
+        Task<AuthorizedPersonDto> AddAuthorizedPersonAsync(CreateAuthorizedPersonDto dto);
+        Task UpdateAuthorizedPersonAsync(UpdateAuthorizedPersonDto dto);
         Task DeleteAuthorizedPersonAsync(int id);
-
-        Task<string> ToggleStatusAsync(string curentUserId, ToggleAuthorizedPersonDto dto);
     }
 }
     
