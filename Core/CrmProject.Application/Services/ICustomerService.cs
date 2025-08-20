@@ -18,7 +18,9 @@ namespace CrmProject.Application.Services.ServiceProducts
         Task<CustomerDto> AddCustomerAsync(CreateCustomerDto createCustomerDto);
 
         // Mevcut bir müşteriyi günceller.
-        Task UpdateCustomerAsync(UpdateCustomerDto updateCustomerDto);
+        // Güncelleme metodu artık userId parametresi alıyor
+        Task UpdateCustomerAsync(UpdateCustomerDto updateCustomerDto, string userId);
+
 
         // Belirli bir ID'ye sahip müşteriyi siler.
         Task DeleteCustomerAsync(int id);

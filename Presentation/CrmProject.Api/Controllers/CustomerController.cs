@@ -2,9 +2,11 @@
 using CrmProject.Application.Interfaces;
 using CrmProject.Application.Services.ServiceProducts;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CrmProject.Api.Controllers
@@ -56,27 +58,29 @@ namespace CrmProject.Api.Controllers
                 });
             }
         }
-
-
-            [HttpPut("{id}")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCustomer(int id, [FromBody] UpdateCustomerDto dto)
         {
             if (id != dto.Id)
-                return BadRequest(new { message = "ID uyuşmuyor" });
+                return BadRequest(new { message = "Id eşleşmiyor." });
+
+            // JWT'den userId çek
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { message = "Kullanıcı bilgisi bulunamadı." });
 
             try
             {
-                await _customerService.UpdateCustomerAsync(dto);
-                return Ok(new { message = "Müşteri güncellendi" });
+                await _customerService.UpdateCustomerAsync(dto, userId);
+                return Ok(new { message = "Müşteri güncellendi." });
             }
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
             }
-            catch (ValidationException ex)
+            catch (Exception ex)
             {
-                var errors = ex.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage });
-                return BadRequest(new { message = "Doğrulama hataları oluştu", errors });
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace CrmProject.WebAPI.Controllers
 {
+    [Authorize] // Giriş yapmış tüm kullanıcılar erişebilir
     [ApiController]
     [Route("api/[controller]")]
     public class AuthorizedPersonController : ControllerBase

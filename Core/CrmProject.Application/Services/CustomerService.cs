@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
+using CrmProject.Application.DTOs.CustomerChangeLogDtos;
 using CrmProject.Application.DTOs.CustomerDtos;
 using CrmProject.Application.Interfaces;
 using CrmProject.Application.Services.ServiceProducts;
 using CrmProject.Application.Validations;
 using CrmProject.Domain.Entities;
 using FluentValidation;
+using Microsoft.AspNetCore.Http;
 
 namespace CrmProject.Application.Services
 {
@@ -15,18 +17,20 @@ namespace CrmProject.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly CustomerValidator _validator;
+        private readonly IHttpContextAccessor _httpContextAccessor; // Token’dan userId almak için
 
         public CustomerService(ICustomerRepository customerRepo,
                                IGenericRepository<Product> productRepo,
                                IUnitOfWork unitOfWork,
                                IMapper mapper,
-                               CustomerValidator validator)
+                               CustomerValidator validator, IHttpContextAccessor httpContextAccessor)
         {
             _customerRepo = customerRepo;
             _productRepo = productRepo;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _validator = validator;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<IEnumerable<CustomerDto>> GetAllCustomersAsync()
@@ -73,26 +77,56 @@ namespace CrmProject.Application.Services
             return _mapper.Map<CustomerDto>(customer);
         }
 
-        public async Task UpdateCustomerAsync(UpdateCustomerDto dto)
+        public async Task UpdateCustomerAsync(UpdateCustomerDto dto, string userId)
         {
+            // 1️ Müşteriyi çek
             var customer = await _customerRepo.GetCustomerWithProductsAsync(dto.Id)
                            ?? throw new KeyNotFoundException("Müşteri bulunamadı.");
 
-            if (_customerRepo.Where(c => c.Email == dto.Email && c.Id != dto.Id).Any())
-                throw new ValidationException("Bu email başka bir müşteri tarafından kullanılıyor.");
+            var logs = new List<CustomerChangeLog>();
 
+            // 2️ Önemli alanları kontrol et ve log ekle
+            if (customer.CompanyName != dto.CompanyName)
+                logs.Add(new CustomerChangeLog
+                {
+                    CustomerId = customer.Id,
+                    FieldName = "CompanyName",
+                    OldValue = customer.CompanyName,
+                    NewValue = dto.CompanyName,
+                    ChangedByUserId = userId,
+                    ChangedAt = DateTime.UtcNow
+                });
+
+            if (customer.BranchName != dto.BranchName)
+                logs.Add(new CustomerChangeLog
+                {
+                    CustomerId = customer.Id,
+                    FieldName = "BranchName",
+                    OldValue = customer.BranchName,
+                    NewValue = dto.BranchName,
+                    ChangedByUserId = userId,
+                    ChangedAt = DateTime.UtcNow
+                });
+
+            if (customer.OwnerName != dto.OwnerName)
+                logs.Add(new CustomerChangeLog
+                {
+                    CustomerId = customer.Id,
+                    FieldName = "OwnerName",
+                    OldValue = customer.OwnerName,
+                    NewValue = dto.OwnerName,
+                    ChangedByUserId = userId,
+                    ChangedAt = DateTime.UtcNow
+                });
+
+            // 3️ Customer entity’sini güncelle
             _mapper.Map(dto, customer);
 
-            var validation = await _validator.ValidateAsync(customer);
-            if (!validation.IsValid)
-                throw new ValidationException(validation.Errors);
-
-            // Eski ürünleri temizle + yenileri ekle
+            // 4️ Ürünleri güncelle
             customer.CustomerProducts.Clear();
             if (dto.ProductIds?.Any() == true)
             {
-                var existingIds = _productRepo.Where(p => dto.ProductIds.Contains(p.Id)).Select(p => p.Id).ToList();
-                foreach (var pid in existingIds)
+                foreach (var pid in dto.ProductIds)
                 {
                     customer.CustomerProducts.Add(new CustomerProduct
                     {
@@ -104,8 +138,17 @@ namespace CrmProject.Application.Services
             }
 
             _customerRepo.Update(customer);
+
+            // 5️ Logları ekle (her değişiklik ayrı satır)
+            foreach (var log in logs)
+            {
+                await _unitOfWork.CustomerChangeLogs.AddAsync(log);
+            }
+
+            // 6️ Kaydet
             await _unitOfWork.SaveChangesAsync();
         }
+
 
         public async Task DeleteCustomerAsync(int id)
         {

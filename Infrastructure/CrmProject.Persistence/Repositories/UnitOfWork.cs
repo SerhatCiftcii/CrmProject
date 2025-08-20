@@ -1,4 +1,5 @@
 ﻿using CrmProject.Application.Interfaces;
+using CrmProject.Domain.Entities;
 using CrmProject.Infrastructure.Persistence.Context;
 
 namespace CrmProject.Persistence.Repositories
@@ -10,8 +11,16 @@ namespace CrmProject.Persistence.Repositories
         public UnitOfWork(AppDbContext context)
         {
             _context = context;
+            Customers = new CustomerRepository(_context);
+            CustomerChangeLogs = new GenericRepository<CustomerChangeLog>(_context);
         }
 
-        public async Task<int> SaveChangesAsync() => await _context.SaveChangesAsync();
+        public ICustomerRepository Customers { get; private set; }
+        public IGenericRepository<CustomerChangeLog> CustomerChangeLogs { get; private set; }
+
+        public async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
+        }
     }
 }

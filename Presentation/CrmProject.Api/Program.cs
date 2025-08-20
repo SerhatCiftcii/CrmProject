@@ -7,6 +7,7 @@ using CrmProject.Application.MappingProfiles; // AutoMapper profilleri için ekl
 using CrmProject.Application.Services; // CustomerService için eklendi
 using CrmProject.Application.Services.AuthorizedPersonServices;
 using CrmProject.Application.Services.AuthServices;
+using CrmProject.Application.Services.CustomerChangeLogServices;
 using CrmProject.Application.Services.MaintenanceServices; // MaintenanceService için eklendi
 using CrmProject.Application.Services.ServiceProducts;
 using CrmProject.Application.Validations; // CustomerValidator için eklendi
@@ -86,6 +87,8 @@ builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
+builder.Services.AddScoped<ICustomerChangeLogRepository, CustomerChangeLogRepository>();
+builder.Services.AddScoped<ICustomerChangeLogService, CustomerChangeLogService>();
 // AutoMapper servislerini ekliyoruz.
 // Birden fazla assembly'deki tüm Profile sınıflarını otomatik olarak bulur ve kaydeder.
 builder.Services.AddAutoMapper(new[] {
