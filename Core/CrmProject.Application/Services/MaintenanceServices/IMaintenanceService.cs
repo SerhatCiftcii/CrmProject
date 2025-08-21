@@ -13,7 +13,7 @@ namespace CrmProject.Application.Services.MaintenanceServices
         Task<MaintenanceDetailDto?> GetByIdAsync(int id);
         Task<MaintenanceDetailDto> AddMaintanenceAsync(CreateMaintenanceDto createMaintenanceDto);
 
-        Task UpdateMaintenanceDto (UpdateMaintenanceDto dto);
+        Task UpdateMaintenanceDto(UpdateMaintenanceDto dto, string updatedByUserName);
         Task DeleteMaintenanceAsync(int id);
     }
 }

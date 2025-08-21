@@ -1,12 +1,14 @@
 ﻿using CrmProject.Application.Dtos.MaintenanceDtos;
 using CrmProject.Application.Services.MaintenanceServices;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace CrmProject.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class MaintenanceController : ControllerBase
@@ -53,6 +55,7 @@ namespace CrmProject.Api.Controllers
             }
         }
 
+
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateMaintenanceDto dto)
         {
@@ -61,7 +64,10 @@ namespace CrmProject.Api.Controllers
 
             try
             {
-                await _maintenanceService.UpdateMaintenanceDto(dto);
+                // JWT ile login olmuş kullanıcının adını alıyoruz
+                var updatedByUserName = User?.Identity?.Name ?? "Bilinmeyen Kullanıcı";
+
+                await _maintenanceService.UpdateMaintenanceDto(dto, updatedByUserName);
                 return Ok(new { message = "Bakım kaydı başarıyla güncellendi." });
             }
             catch (KeyNotFoundException ex)
@@ -70,10 +76,7 @@ namespace CrmProject.Api.Controllers
             }
             catch (ValidationException ex)
             {
-                var errors = ex.Errors != null
-                    ? ex.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage })
-                    : null;
-
+                var errors = ex.Errors?.Select(e => new { e.PropertyName, e.ErrorMessage });
                 return BadRequest(new { message = "Doğrulama hataları oluştu.", errors });
             }
         }

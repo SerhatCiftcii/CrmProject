@@ -8,8 +8,11 @@ using CrmProject.Application.Services; // CustomerService için eklendi
 using CrmProject.Application.Services.AuthorizedPersonServices;
 using CrmProject.Application.Services.AuthServices;
 using CrmProject.Application.Services.CustomerChangeLogServices;
+using CrmProject.Application.Services.EmailServices;
+using CrmProject.Application.Services.EmailServices.cs;
 using CrmProject.Application.Services.MaintenanceServices; // MaintenanceService için eklendi
 using CrmProject.Application.Services.ServiceProducts;
+using CrmProject.Application.Settings;
 using CrmProject.Application.Validations; // CustomerValidator için eklendi
 using CrmProject.Domain.Entities;
 using CrmProject.Infrastructure.Persistence.Context;
@@ -121,6 +124,10 @@ builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 // AuthService ve JWT token generator servislerini ekliyoruz.
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Email settings configuration
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddControllers();
 

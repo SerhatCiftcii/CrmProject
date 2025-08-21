@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using CrmProject.Application.Dtos.MaintenanceDtos;
+using CrmProject.Application.Helpers;
 using CrmProject.Application.Interfaces;
+using CrmProject.Application.Services.EmailServices;
 using CrmProject.Application.Validations;
 using CrmProject.Domain.Entities;
 using CrmProject.Persistence.Repositories.IMaintenanceRepositories;
@@ -19,16 +21,18 @@ namespace CrmProject.Application.Services.MaintenanceServices
         private readonly IGenericRepository<Product> _productRepository;
         IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IEmailService _emailService;
 
         private readonly MaintenanceValidator _validator;
 
-        public MaintenanceService(IMaintenanceRepository maintanenceRepo, IUnitOfWork unitOfWork, IMapper mapper, MaintenanceValidator validator, IGenericRepository<Product> productRepository)
+        public MaintenanceService(IMaintenanceRepository maintanenceRepo, IUnitOfWork unitOfWork, IMapper mapper, MaintenanceValidator validator, IGenericRepository<Product> productRepository, IEmailService emailService)
         {
             _maintanenceRepo = maintanenceRepo;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _validator = validator;
             _productRepository = productRepository;
+             _emailService = emailService;
         }
 
         public async Task<List<MaintenanceDetailDto>> GetAllMaintenanceWithDetailsAsync()
@@ -79,22 +83,31 @@ namespace CrmProject.Application.Services.MaintenanceServices
           return _mapper.Map<MaintenanceDetailDto>(maintenance);
         }
 
-        public async Task UpdateMaintenanceDto(UpdateMaintenanceDto dto)
+        public async Task UpdateMaintenanceDto(UpdateMaintenanceDto dto, string updatedByUserName)
         {
-            var maintenance = await _maintanenceRepo.GetMaintenanceWithDetailsAsync(dto.Id) ?? throw new KeyNotFoundException($"ID'si  {dto.Id} olan bakım kaydı bulunamadı.");
+            // Bakımı getir (detaylı)
+            var maintenance = await _maintanenceRepo.GetMaintenanceWithDetailsAsync(dto.Id)
+                ?? throw new KeyNotFoundException($"ID'si {dto.Id} olan bakım kaydı bulunamadı.");
+
+            // Eski değerleri al
+            var oldValues = _mapper.Map<MaintenanceDetailDto>(maintenance);
+
+            // DTO ile mevcut entity'yi güncelle
             _mapper.Map(dto, maintenance);
 
+            // Validation
             var validation = await _validator.ValidateAsync(maintenance);
             if (!validation.IsValid)
-            
                 throw new ValidationException(validation.Errors);
 
-            //Mevcut ürünnleri temizle ve yeni ürünleri ekle
+            // Ürünleri güncelle
             maintenance.MaintenanceProducts.Clear();
             if (dto.ProductIds?.Any() == true)
             {
-                var existingProductIds = _productRepository.Where(p => dto.ProductIds.Contains(p.Id))
-                                                          .Select(p => p.Id).ToList();
+                var existingProductIds = _productRepository
+                    .Where(p => dto.ProductIds.Contains(p.Id))
+                    .Select(p => p.Id)
+                    .ToList();
 
                 foreach (var pid in existingProductIds)
                 {
@@ -106,10 +119,41 @@ namespace CrmProject.Application.Services.MaintenanceServices
                 }
             }
 
+            // Repository üzerinden güncelle
             _maintanenceRepo.Update(maintenance);
             await _unitOfWork.SaveChangesAsync();
 
+            // Mail Gönderimi
+            if (maintenance.Customer != null) // Customer null olabilir, kontrol edelim
+            {
+                var subject = $"{maintenance.Customer.CompanyName} bakım anlaşması güncellendi";
+                var body = $@"
+                    <p>{maintenance.Customer.CompanyName} firmasının bakım anlaşması {updatedByUserName} tarafından güncellenmiştir.</p>
 
+                    <h4>Eski Anlaşma Bilgileri:</h4>
+                    <ul>
+                      <li>Başlangıç Tarihi: {oldValues.StartDate:yyyy-MM-dd}</li>
+                      <li>Bitiş Tarihi: {oldValues.EndDate:yyyy-MM-dd}</li>
+                      <li>Açıklama: {oldValues.Description}</li>
+                      <li>Teklif Durumu: {oldValues.OfferStatus}</li>
+                      <li>Anlaşma Durumu: {oldValues.ContractStatus}</li>
+                      <li>Lisans Durumu: {oldValues.LicenseStatus}</li>
+                      <li>Firma Durumu: {oldValues.FirmSituation}</li>
+                    </ul>
+
+                    <h4>Yeni Anlaşma Bilgileri:</h4>
+                    <ul>
+                      <li>Başlangıç Tarihi: {maintenance.StartDate:yyyy-MM-dd}</li>
+                      <li>Bitiş Tarihi: {maintenance.EndDate:yyyy-MM-dd}</li>
+                      <li>Açıklama: {maintenance.Description}</li>
+                      <li>Teklif Durumu: {EnumHelper.GetDisplayName(maintenance.OfferStatus)}</li>
+                      <li>Anlaşma Durumu: {EnumHelper.GetDisplayName(maintenance.ContractStatus)}</li>
+                      <li>Lisans Durumu: {EnumHelper.GetDisplayName(maintenance.LicenseStatus)}</li>
+                      <li>Firma Durumu: {EnumHelper.GetDisplayName(maintenance.FirmSituation)}</li>
+                    </ul>";
+
+                await _emailService.SendEmailAsync("ciftciserhatapp@gmail.com", subject, body);
+            }
         }
         public async Task DeleteMaintenanceAsync(int id)
         {

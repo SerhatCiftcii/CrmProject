@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using CrmProject.Application.Dtos.MaintenanceDtos;
 using CrmProject.Application.DTOs.ProductDtos;
+using CrmProject.Application.Helpers;
 using CrmProject.Domain.Entities;
 
 public class MaintenanceProfile : Profile
@@ -9,12 +10,12 @@ public class MaintenanceProfile : Profile
     {
         //  Maintenance -> MaintenanceDetailDto
         CreateMap<Maintenance, MaintenanceDetailDto>()
-             .ForMember(dest => dest.CompanyName, opt => opt.MapFrom(src => src.Customer.CompanyName)) 
-            .ForMember(dest => dest.OfferStatus, opt => opt.MapFrom(src => src.OfferStatus.ToString()))
-            .ForMember(dest => dest.ContractStatus, opt => opt.MapFrom(src => src.ContractStatus.ToString()))
-            .ForMember(dest => dest.LicenseStatus, opt => opt.MapFrom(src => src.LicenseStatus.ToString()))
-            .ForMember(dest => dest.FirmSituation, opt => opt.MapFrom(src => src.FirmSituation.ToString()))
-            .ForMember(dest => dest.Products, opt => opt.MapFrom(src => src.MaintenanceProducts.Select(mp => mp.Product)));
+              .ForMember(dest => dest.CompanyName, opt => opt.MapFrom(src => src.Customer.CompanyName))
+              .ForMember(dest => dest.OfferStatus, opt => opt.MapFrom(src => EnumHelper.GetDisplayName(src.OfferStatus)))
+              .ForMember(dest => dest.ContractStatus, opt => opt.MapFrom(src => EnumHelper.GetDisplayName(src.ContractStatus)))
+              .ForMember(dest => dest.LicenseStatus, opt => opt.MapFrom(src => EnumHelper.GetDisplayName(src.LicenseStatus)))
+              .ForMember(dest => dest.FirmSituation, opt => opt.MapFrom(src => EnumHelper.GetDisplayName(src.FirmSituation)))
+              .ForMember(dest => dest.Products, opt => opt.MapFrom(src => src.MaintenanceProducts.Select(mp => mp.Product)));
 
         //  Product -> ProductDto (Maintenance içindeki ürünleri maplemek için)
         CreateMap<Product, ProductDto>();
